@@ -3,6 +3,65 @@
 -- Database: Schaalmodelauto’s
 -- ==========================================
 
+/*
+-- Vraag 1: Welke producten moeten we meer of minder inkopen?--
+We hebben gekeken welke producten het vaakst worden verkocht en de meeste winst opleveren.  
+Deze producten moeten we altijd op voorraad hebben.
+
+Resultaten uit de query:
+
+productName                  | productLine
+-----------------------------|-------------
+1968 Ford Mustang            | Classic Cars
+1911 Ford Town Car           | Vintage Cars
+1928 Mercedes-Benz SSK       | Vintage Cars
+1960 BSA Gold Star DBD34     | Motorcycles
+1997 BMW F650 ST             | Motorcycles
+1928 Ford Phaeton Deluxe     | Vintage Cars
+2002 Yamaha YZR M1           | Motorcycles
+The Mayflower                | Ships
+F/A 18 Hornet 1/72           | Planes
+Pont Yacht                   | Ships
+
+--Vraag 2: Hoe richten we marketing op klanten?--
+
+**Belangrijkste klanten (VIP, leveren veel winst op):**
+
+contactLastName | contactFirstName | city      | country | profit
+----------------|-----------------|----------|--------|----------
+Freyre          | Diego           | Madrid   | Spain  | 326,519.66
+Nelson          | Susan           | San Rafael | USA   | 236,769.39
+Young           | Jeff            | NYC      | USA    | 72,370.09
+Ferguson        | Peter           | Melbourne| Australia | 70,311.07
+Labrune         | Janine          | Nantes   | France | 60,875.30
+
+**Minder actieve klanten (leveren weinig winst op):**
+
+contactLastName | contactFirstName | city       | country | profit
+----------------|-----------------|-----------|--------|----------
+Young           | Mary            | Glendale  | USA    | 2,610.87
+Taylor          | Leslie          | Brickhaven| USA    | 6,586.02
+Ricotti         | Franco          | Milan     | Italy  | 9,532.93
+Schmitt         | Carine          | Nantes    | France | 10,063.80
+Smith           | Thomas          | London    | UK     | 10,868.04
+
+--Wat dit betekent: 
+- VIP-klanten leveren veel winst en verdienen speciale aanbiedingen of beloningen om ze tevreden te houden.  
+- Minder actieve klanten leveren minder winst, maar we kunnen proberen ze meer aankopen te laten doen door gerichte acties of kortingen.
+
+--Vraag 3: Hoeveel kunnen we uitgeven aan nieuwe klanten?--
+
+De gemiddelde winst per klant (Customer Lifetime Value, LTV) is:
+
+average_customer_profit
+-----------------------
+39,039.59
+
+--Wat dit betekent:-- 
+- Een gemiddelde klant levert ongeveer $39.039 winst op.  
+- Bijvoorbeeld: als we 10 nieuwe klanten krijgen, levert dat ongeveer $390.395 winst op.  
+- Hiermee kunnen we bepalen hoeveel geld we veilig kunnen uitgeven aan marketing om nieuwe klanten te werven.
+
 -- Beschrijving van de tabellen en hun relaties:
 -- 
 -- Customers: bevat gegevens van klanten, zoals naam, adres en contactinformatie.
@@ -17,6 +76,7 @@
 -- ==========================================
 -- Query: tabeloverzicht met aantal kolommen en rijen
 -- ==========================================
+*/
 
 SELECT 'Customers' AS table_name,
        13 AS number_of_attributes,
@@ -229,69 +289,3 @@ WITH CustomerProfit AS (
 SELECT 
     ROUND(AVG(profit), 2) AS average_customer_profit  -- gemiddelde winst afgerond op 2 decimalen
 FROM CustomerProfit;
-
-/*
-**Verhaal van het Customers and Products Analysis Project**
-
-**Vraag 1: Welke producten moeten we meer of minder inkopen?**
-We hebben gekeken welke producten het vaakst worden verkocht en de meeste winst opleveren.  
-Deze producten moeten we altijd op voorraad hebben.
-
-Resultaten uit de query (prioriteit voor restocking):
-
-productName                  | productLine
------------------------------|-------------
-1968 Ford Mustang            | Classic Cars
-1911 Ford Town Car           | Vintage Cars
-1928 Mercedes-Benz SSK       | Vintage Cars
-1960 BSA Gold Star DBD34     | Motorcycles
-1997 BMW F650 ST             | Motorcycles
-1928 Ford Phaeton Deluxe     | Vintage Cars
-2002 Yamaha YZR M1           | Motorcycles
-The Mayflower                | Ships
-F/A 18 Hornet 1/72           | Planes
-Pont Yacht                   | Ships
-
----
-
-**Vraag 2: Hoe richten we marketing op klanten?**
-
-**Belangrijkste klanten (VIP, leveren veel winst):**
-
-contactLastName | contactFirstName | city      | country | profit
-----------------|-----------------|----------|--------|----------
-Freyre          | Diego           | Madrid   | Spain  | 326,519.66
-Nelson          | Susan           | San Rafael | USA   | 236,769.39
-Young           | Jeff            | NYC      | USA    | 72,370.09
-Ferguson        | Peter           | Melbourne| Australia | 70,311.07
-Labrune         | Janine          | Nantes   | France | 60,875.30
-
-**Minder actieve klanten (leveren weinig winst):**
-
-contactLastName | contactFirstName | city       | country | profit
-----------------|-----------------|-----------|--------|----------
-Young           | Mary            | Glendale  | USA    | 2,610.87
-Taylor          | Leslie          | Brickhaven| USA    | 6,586.02
-Ricotti         | Franco          | Milan     | Italy  | 9,532.93
-Schmitt         | Carine          | Nantes    | France | 10,063.80
-Smith           | Thomas          | London    | UK     | 10,868.04
-
-**Wat dit betekent:**  
-- VIP-klanten leveren veel winst en verdienen speciale aanbiedingen of beloningen om ze tevreden te houden.  
-- Minder actieve klanten leveren minder winst, maar we kunnen proberen ze meer aankopen te laten doen door gerichte acties of kortingen.
-
----
-
-**Vraag 3: Hoeveel kunnen we uitgeven aan nieuwe klanten?**
-
-De gemiddelde winst per klant (Customer Lifetime Value, LTV) is:
-
-average_customer_profit
------------------------
-39,039.59
-
-**Wat dit betekent:**  
-- Een gemiddelde klant levert ongeveer $39.039 winst op.  
-- Bijvoorbeeld: als we 10 nieuwe klanten krijgen, levert dat ongeveer $390.395 winst op.  
-- Hiermee kunnen we bepalen hoeveel geld we veilig kunnen uitgeven aan marketing om nieuwe klanten te werven.
-*/
