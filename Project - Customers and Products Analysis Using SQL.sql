@@ -2,13 +2,10 @@
 -- Project: Klanten- en Productanalyse
 -- Database: Schaalmodelauto’s
 -- ==========================================
-
 /*
--- Vraag 1: Welke producten moeten we meer of minder inkopen?--
-We hebben gekeken welke producten het vaakst worden verkocht en de meeste winst opleveren.  
-Deze producten moeten we altijd op voorraad hebben.
+Resultaten uit de queries:
 
-Resultaten uit de query:
+-- Vraag 1: Welke producten moeten we meer of minder inkopen?--
 
 productName                  | productLine
 -----------------------------|-------------
@@ -78,49 +75,33 @@ average_customer_profit
 -- ==========================================
 */
 
-SELECT 'Customers' AS table_name,
-       13 AS number_of_attributes,
-       COUNT(*) AS number_of_rows
-FROM Customers
-UNION ALL
-SELECT 'Products',
-       9,
-       COUNT(*)
-FROM Products
-UNION ALL
-SELECT 'ProductLines',
-       4,
-       COUNT(*)
-FROM ProductLines
-UNION ALL
-SELECT 'Orders',
-       7,
-       COUNT(*)
-FROM Orders
-UNION ALL
-SELECT 'OrderDetails',
-       5,
-       COUNT(*)
-FROM OrderDetails
-UNION ALL
-SELECT 'Payments',
-       4,
-       COUNT(*)
-FROM Payments
-UNION ALL
-SELECT 'Employees',
-       8,
-       COUNT(*)
-FROM Employees
-UNION ALL
-SELECT 'Offices',
-       9,
-       COUNT(*)
-FROM Offices;
+-- SQL Queries
 
--- Deze query berekent voor elk product hoe snel het bijna uitverkocht is 
--- door de som van alle bestellingen te delen door de voorraad, 
--- afgerond op 2 decimalen, en toont de top 10 producten met de hoogste ratio.
+-- ==========================================
+-- Overzicht: aantal rijen per tabel
+-- ==========================================
+
+SELECT 'Customers' AS table_name, 13 AS number_of_attributes, COUNT(*) AS number_of_rows FROM Customers
+UNION ALL
+SELECT 'Products', 9, COUNT(*) FROM Products
+UNION ALL
+SELECT 'ProductLines', 4, COUNT(*) FROM ProductLines
+UNION ALL
+SELECT 'Orders', 7, COUNT(*) FROM Orders
+UNION ALL
+SELECT 'OrderDetails', 5, COUNT(*) FROM OrderDetails
+UNION ALL
+SELECT 'Payments', 4, COUNT(*) FROM Payments
+UNION ALL
+SELECT 'Employees', 8, COUNT(*) FROM Employees
+UNION ALL
+SELECT 'Offices', 9, COUNT(*) FROM Offices;
+
+
+-- ==========================================
+-- Producten die bijna uitverkocht zijn
+-- ==========================================
+
 SELECT p.productCode,
        ROUND(
          (SELECT SUM(o.quantityOrdered)
@@ -132,9 +113,11 @@ FROM products p
 ORDER BY low_stock_ratio DESC
 LIMIT 10;
 
--- Deze query berekent de totale omzet per product 
--- door de hoeveelheid bestellingen te vermenigvuldigen met de prijs, 
--- groepeert dit per product en toont de top 10 best presterende producten.
+
+-- ==========================================
+-- Producten met hoogste omzet
+-- ==========================================
+
 SELECT productCode,
        SUM(quantityOrdered * priceEach) AS product_performance
 FROM orderdetails
@@ -142,10 +125,11 @@ GROUP BY productCode
 ORDER BY product_performance DESC
 LIMIT 10;
 
--- Deze query vindt prioriteitsproducten voor herbevoorrading:
--- het combineert de top 10 producten die bijna uitverkocht zijn (LowStock)
--- met de top 10 producten die de meeste omzet opleveren (ProductPerformance)
--- en toont alleen producten die in beide lijsten staan.
+
+-- ==========================================
+-- Prioriteitsproducten (staan in beide top 10 lijsten)
+-- ==========================================
+
 WITH LowStock AS (
     SELECT p.productCode,
            ROUND(
@@ -166,126 +150,104 @@ ProductPerformance AS (
     ORDER BY product_performance DESC
     LIMIT 10
 )
+
 SELECT *
 FROM products
 WHERE productCode IN (
     SELECT productCode FROM LowStock
     INTERSECT
-    SELECT productCode FROM ProductPerformance);
-	
--- Bereken voor elke klant hoeveel winst hij/zij oplevert
--- door de verkochte hoeveelheid te vermenigvuldigen met het verschil tussen de prijs in de bestelling en de inkoopprijs
--- en tel dit op voor alle bestellingen van die klant.
-SELECT c.customerNumber,
-       SUM(od.quantityOrdered * (od.priceEach - p.buyPrice)) AS profit
-FROM customers c
-JOIN orders o ON c.customerNumber = o.customerNumber
-JOIN orderdetails od ON o.orderNumber = od.orderNumber
-JOIN products p ON od.productCode = p.productCode
-GROUP BY c.customerNumber
-ORDER BY profit DESC;
+    SELECT productCode FROM ProductPerformance
+);
 
--- Top 5 VIP-klanten
+
+-- ==========================================
+-- VRAAG 2: Hoe richten we marketing op klanten?
+-- ==========================================
+
+/*
+Ik bereken eerst hoeveel winst elke klant oplevert.
+Winst = verkochte hoeveelheid × (verkoopprijs - inkoopprijs)
+*/
+
 WITH CustomerProfit AS (
-    SELECT o.customerNumber,
-           SUM(od.quantityOrdered * (od.priceEach - p.buyPrice)) AS profit
+    SELECT 
+        o.customerNumber, 
+        SUM(od.quantityOrdered * (od.priceEach - p.buyPrice)) AS profit  
     FROM products p
-    JOIN orderdetails od ON p.productCode = od.productCode
-    JOIN orders o ON o.orderNumber = od.orderNumber
-    GROUP BY o.customerNumber
+    JOIN orderdetails od 
+        ON p.productCode = od.productCode  
+    JOIN orders o 
+        ON o.orderNumber = od.orderNumber  
+    GROUP BY o.customerNumber 
 )
-SELECT c.contactLastName,
-       c.contactFirstName,
-       c.city,
-       c.country,
-       cp.profit
+
+-- ==========================================
+-- Top 5 VIP-klanten (meeste winst)
+-- ==========================================
+
+SELECT 
+    c.contactLastName,
+    c.contactFirstName,
+    c.city,
+    c.country,
+    cp.profit
 FROM CustomerProfit cp
-JOIN customers c ON cp.customerNumber = c.customerNumber
+JOIN customers c 
+    ON cp.customerNumber = c.customerNumber  
 ORDER BY cp.profit DESC
 LIMIT 5;
 
--- **Finding the VIP Customers**  
--- Deze query vindt de top 5 klanten die de meeste winst opleveren (VIPs)  
--- Gebruik deze informatie om marketing en communicatie af te stemmen op de meest waardevolle klanten.
 
--- STAP 1: Bereken de winst per klant met een CTE (tijdelijke tabel)
+-- ==========================================
+-- Top 5 minst winstgevende klanten
+-- ==========================================
+
 WITH CustomerProfit AS (
     SELECT 
-        o.customerNumber,  -- het nummer van de klant
-        SUM(od.quantityOrdered * (od.priceEach - p.buyPrice)) AS profit  -- totale winst per klant
+        o.customerNumber,  
+        SUM(od.quantityOrdered * (od.priceEach - p.buyPrice)) AS profit  
     FROM products p
     JOIN orderdetails od 
-        ON p.productCode = od.productCode  -- koppelt productgegevens aan bestelde producten
+        ON p.productCode = od.productCode  
     JOIN orders o 
-        ON o.orderNumber = od.orderNumber  -- koppelt bestelling aan de klant
-    GROUP BY o.customerNumber  -- groepeer resultaten per klant
+        ON o.orderNumber = od.orderNumber  
+    GROUP BY o.customerNumber  
 )
 
--- STAP 2: Top 5 VIP-klanten ophalen
--- Voeg klantgegevens toe via een JOIN met de customers tabel
 SELECT 
-    c.contactLastName,   -- achternaam van de klant
-    c.contactFirstName,  -- voornaam van de klant
-    c.city,              -- stad waar de klant woont
-    c.country,           -- land van de klant
-    cp.profit            -- winst die de klant oplevert
+    c.contactLastName,
+    c.contactFirstName,
+    c.city,
+    c.country,
+    cp.profit
 FROM CustomerProfit cp
 JOIN customers c 
-    ON cp.customerNumber = c.customerNumber  -- voeg klantinformatie toe
-ORDER BY cp.profit DESC  -- sorteert van hoog naar laag, zodat VIP-klanten bovenaan staan
-LIMIT 5;  -- laat alleen de top 5 zien
+    ON cp.customerNumber = c.customerNumber  
+ORDER BY cp.profit ASC
+LIMIT 5;
 
--- **Finding the Least Engaged Customers**  
--- Deze query vindt de top 5 klanten die de minste winst opleveren (minder betrokken)  
--- Gebruik deze informatie om marketingacties te richten op klanten die meer betrokken kunnen worden.
 
--- STAP 1: Bereken de winst per klant met een CTE (tijdelijke tabel)
+-- ==========================================
+-- VRAAG 3: Hoeveel kunnen we uitgeven aan nieuwe klanten?
+-- ==========================================
+
+/*
+Hier bereken ik de gemiddelde winst per klant.
+Dit noemen we ook Customer Lifetime Value (LTV).
+*/
+
 WITH CustomerProfit AS (
     SELECT 
-        o.customerNumber,  -- het nummer van de klant
-        SUM(od.quantityOrdered * (od.priceEach - p.buyPrice)) AS profit  -- totale winst per klant
+        o.customerNumber, 
+        SUM(od.quantityOrdered * (od.priceEach - p.buyPrice)) AS profit  
     FROM products p
     JOIN orderdetails od 
-        ON p.productCode = od.productCode  -- koppelt productgegevens aan bestelde producten
+        ON p.productCode = od.productCode  
     JOIN orders o 
-        ON o.orderNumber = od.orderNumber  -- koppelt bestelling aan de klant
-    GROUP BY o.customerNumber  -- groepeer resultaten per klant
+        ON o.orderNumber = od.orderNumber  
+    GROUP BY o.customerNumber  
 )
 
--- STAP 2: Top 5 minst betrokken klanten ophalen
--- Voeg klantgegevens toe via een JOIN met de customers tabel
 SELECT 
-    c.contactLastName,   -- achternaam van de klant
-    c.contactFirstName,  -- voornaam van de klant
-    c.city,              -- stad waar de klant woont
-    c.country,           -- land van de klant
-    cp.profit            -- winst die de klant oplevert
-FROM CustomerProfit cp
-JOIN customers c 
-    ON cp.customerNumber = c.customerNumber  -- voeg klantinformatie toe
-ORDER BY cp.profit ASC  -- sorteert van laag naar hoog, zodat de minst winstgevende klanten bovenaan staan
-LIMIT 5;  
-
--- laat alleen de top 5 zien
-
--- **Customer Lifetime Value (LTV) berekenen**  
--- Deze query berekent de gemiddelde winst per klant.  
--- Dit helpt bepalen hoeveel geld we veilig kunnen uitgeven aan het aantrekken van nieuwe klanten.
-
--- STAP 1: Maak een CTE (tijdelijke tabel) met de winst per klant
-WITH CustomerProfit AS (
-    SELECT 
-        o.customerNumber,  -- het nummer van de klant
-        SUM(od.quantityOrdered * (od.priceEach - p.buyPrice)) AS profit  -- totale winst per klant
-    FROM products p
-    JOIN orderdetails od 
-        ON p.productCode = od.productCode  -- koppelt productgegevens aan bestelde producten
-    JOIN orders o 
-        ON o.orderNumber = od.orderNumber  -- koppelt bestelling aan de klant
-    GROUP BY o.customerNumber  -- groepeer resultaten per klant
-)
-
--- STAP 2: Bereken de gemiddelde winst per klant (Customer Lifetime Value)
-SELECT 
-    ROUND(AVG(profit), 2) AS average_customer_profit  -- gemiddelde winst afgerond op 2 decimalen
+    ROUND(AVG(profit), 2) AS average_customer_profit  
 FROM CustomerProfit;

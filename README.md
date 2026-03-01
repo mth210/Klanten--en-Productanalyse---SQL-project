@@ -1,22 +1,12 @@
+Schaalmodelauto’s Database – SQL Project
 
-# Customers and Products Analysis
 
-**Project:** Schaalmodelauto's Database  
-**Doel:** Analyse van producten en klanten om winst en voorraadbeheer te verbeteren
 
-## Tabellen
-- Customers (klanten)
-- Employees (medewerkers)
-- Offices (kantoren)
-- Orders (bestellingen)
-- OrderDetails (bestelgegevens)
-- Payments (betalingen)
-- Products (producten)
-- ProductLines (productcategorieën)
+SQL data-analyseproject op een relationele bedrijfsdatabase. Dat ik heb gemaakt op Dataquest om te oefenen met SQL, (Git)Hub, en Command Prompt.
 
-## Analyses
-1. Low stock producten (Top 10)
-2. Productprestaties (Top 10)
-3. Winst per klant, VIP-klanten en minst actieve klanten
+Ik analyseer productprestaties, klantwaarde en winstgevendheid met behulp van JOINs, aggregaties (SUM, COUNT, AVG) en winstberekeningen om waardevolle bedrijfsinzichten uit data te halen.
 
+
+
+Vaardigheden: SQL · Data-analyse · Relationele databases · Bedrijfsinzichten
 
